@@ -52,13 +52,34 @@ const Timeline = mongoose.model("timeline", {
   modify_time: Date
 });
 
+async function getData(times) {
+  let sourceData = null;
+  if (times > 0) {
+    console.log(`[sync-request] retry ${times}...`);
+  }
+  if (times >= 20) {
+    throw new Error("get dxy.cn data error");
+  }
+  try {
+    sourceData = await request({
+      method: "GET",
+      timeout: 15,
+      uri: "https://3g.dxy.cn/newh5/view/pneumonia"
+    });
+  } catch (e) {
+    console.error(e);
+    sourceData = await getData((times || 1) + 1);
+  }
+  return sourceData;
+}
+
 async function exec() {
   console.log(
     `[sync] task begin at ${moment().format("YYYY-MM-DD HH:mm:ss.SSS")}`
   );
   const beginTimer = new Date();
   console.log("[sync] get dxy.cn data");
-  const sourceData = await request("https://3g.dxy.cn/newh5/view/pneumonia");
+  const sourceData = await getData(0);
   const $ = cheerio.load(sourceData);
   let getAreaStat = [];
   eval(
