@@ -67,7 +67,7 @@ async function getData(times) {
       uri: "https://3g.dxy.cn/newh5/view/pneumonia"
     });
   } catch (e) {
-    console.log(e);
+    console.log(e.message);
     sourceData = await getData((times || 0) + 1);
   }
   return sourceData;
