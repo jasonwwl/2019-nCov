@@ -63,7 +63,7 @@ async function getData(times) {
   try {
     sourceData = await request({
       method: "GET",
-      timeout: 1500,
+      timeout: 15000,
       uri: "https://3g.dxy.cn/newh5/view/pneumonia"
     });
   } catch (e) {
