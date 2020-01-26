@@ -63,12 +63,12 @@ async function getData(times) {
   try {
     sourceData = await request({
       method: "GET",
-      timeout: 15,
+      timeout: 1500,
       uri: "https://3g.dxy.cn/newh5/view/pneumonia"
     });
   } catch (e) {
-    console.error(e);
-    sourceData = await getData((times || 1) + 1);
+    console.log(e);
+    sourceData = await getData((times || 0) + 1);
   }
   return sourceData;
 }
@@ -218,6 +218,6 @@ exec()
     process.exit(0);
   })
   .catch(e => {
-    console.error(e);
+    console.log(e);
     process.exit(1);
   });
