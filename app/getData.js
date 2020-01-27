@@ -2,6 +2,11 @@ const request = require("request-promise-native");
 const cheerio = require("cheerio");
 const mongoose = require("mongoose");
 const moment = require("moment");
+const path = require("path");
+const FileCookieStore = require("tough-cookie-filestore");
+const jar = request.jar(
+  new FileCookieStore(path.join(__dirname, "cookies.json"))
+);
 
 const dburi = process.env.MONGO_URL;
 
@@ -60,26 +65,24 @@ async function getData(times) {
   if (times >= 20) {
     throw new Error("get dxy.cn data error");
   }
+  let result = null;
   try {
     sourceData = await request({
       method: "GET",
       timeout: 15000,
+      jar: jar,
       uri: "https://3g.dxy.cn/newh5/view/pneumonia"
     });
+    result = parseData(sourceData);
   } catch (e) {
     console.log(e.message);
-    sourceData = await getData((times || 0) + 1);
+    result = await getData((times || 0) + 1);
   }
-  return sourceData;
+  return result;
 }
 
-async function exec() {
-  console.log(
-    `[sync] task begin at ${moment().format("YYYY-MM-DD HH:mm:ss.SSS")}`
-  );
-  const beginTimer = new Date();
-  console.log("[sync] get dxy.cn data");
-  const sourceData = await getData(0);
+function parseData(sourceData) {
+  console.log("[sync] parse html content...");
   const $ = cheerio.load(sourceData);
   let getAreaStat = [];
   eval(
@@ -99,6 +102,21 @@ async function exec() {
       .html()
       .replace("window.getTimelineService", "getTimelineService")
   );
+  console.log("[sync] parsed html content successful!");
+  return { getAreaStat, getStatisticsService, getTimelineService };
+}
+
+async function exec() {
+  console.log(
+    `[sync] task begin at ${moment().format("YYYY-MM-DD HH:mm:ss.SSS")}`
+  );
+  const beginTimer = new Date();
+  console.log("[sync] get dxy.cn data");
+  const {
+    getAreaStat,
+    getStatisticsService,
+    getTimelineService
+  } = await getData(0);
   const nowtime = new Date();
   const statAreaData = [];
   getAreaStat.forEach(p => {
